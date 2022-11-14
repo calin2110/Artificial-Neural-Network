@@ -1,0 +1,12 @@
+# images and models
+dataset/
+model.nn
+
+### IntelliJ IDEA ###
+.idea
+
+# cached data
+__pycache__/
+
+# environment
+venv/

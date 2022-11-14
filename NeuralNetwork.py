@@ -57,9 +57,18 @@ class NeuralNetwork:
         self.__dataset = Dataset()
 
     def save_state(self, filename: str):
-        open(filename, "w").close()
-        with open(filename, "wb") as file:
-            pickle.dump(self, file)
+        with open("w1.nn", "wb") as f:
+            pickle.dump(self.__w1, f)
+        with open("b1.nn", "wb") as f:
+            pickle.dump(self.__b1, f)
+        with open("w2.nn", "wb") as f:
+            pickle.dump(self.__w2, f)
+        with open("b2.nn", "wb") as f:
+            pickle.dump(self.__b2, f)
+        with open("wo.nn", "wb") as f:
+            pickle.dump(self.__wo, f)
+        with open("bo.nn", "wb") as f:
+            pickle.dump(self.__bo, f)
 
     # values has to be a column vector with input_layers lines
     def forward_pass(self, values: np.array, supposed_activations: np.array) -> dict[str, any]:
@@ -170,11 +179,17 @@ class NeuralNetwork:
     def test_on_test_data(self):
         correct_answers = 0
         total_answers = len(self.__dataset.test_X)
+        answers = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0}
+        correctly_predicted = {0: 0, 1: 0, 2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0, 8: 0, 9: 0}
         for i in range(total_answers):
             pixels_to_predict = self.__dataset.test_X[i]
             predicted_answer = self.predict_result(pixels_to_predict)
             correct_answer = self.__dataset.test_y[i]
+            answers[correct_answer] += 1
             if predicted_answer[0] == correct_answer:
                 correct_answers += 1
-        print(correct_answers)
-        print(total_answers)
+                correctly_predicted[correct_answer] += 1
+        accuracy = correct_answers / total_answers
+        print(f"Accuracy: {accuracy}")
+        print(f"Answers: {answers}")
+        print(f"Predicted correctly: {correctly_predicted}")

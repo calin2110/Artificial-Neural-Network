@@ -1,7 +1,4 @@
-import random
-
 import numpy as np
-from PIL import Image
 from keras.datasets import mnist
 
 from Constants import MAX_PIXEL_VALUE, MAX_WEIGHT_VALUE, MIN_WEIGHT_VALUE
@@ -26,7 +23,6 @@ class Dataset:
         self.test_X = self.test_X / MAX_PIXEL_VALUE
         self.__current_position = 0
 
-
     def get_batch(self, batch_size: int) -> list[tuple[int, np.array]]:
         train_batch = self.__train_X[self.__current_position: self.__current_position + batch_size]
         labels_batch = self.__train_y[self.__current_position: self.__current_position + batch_size]
@@ -34,7 +30,8 @@ class Dataset:
         return zip(labels_batch, train_batch)
 
 
-def generate_random_matrix(lines: int, columns: int, min_value: float = MIN_WEIGHT_VALUE, max_value: float = MAX_WEIGHT_VALUE) -> np.array:
+def generate_random_matrix(lines: int, columns: int, min_value: float = MIN_WEIGHT_VALUE,
+                           max_value: float = MAX_WEIGHT_VALUE) -> np.array:
     # throw exception if max_value > min_value
     # return np.random.normal(0, 1, size=(lines, columns))
     # return np.zeros((lines, columns))
