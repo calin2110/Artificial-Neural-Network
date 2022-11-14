@@ -1,7 +1,7 @@
 import numpy as np
 from keras.datasets import mnist
 
-from Constants import MAX_PIXEL_VALUE, MAX_WEIGHT_VALUE, MIN_WEIGHT_VALUE
+from Constants import MAX_PIXEL_VALUE, MAX_WEIGHT_VALUE, MIN_WEIGHT_VALUE, RANDOM_DISTRIBUTION, MEAN, STANDARD_DEVIATION
 
 
 class Dataset:
@@ -30,41 +30,19 @@ class Dataset:
         return zip(labels_batch, train_batch)
 
 
-def generate_random_matrix(lines: int, columns: int, min_value: float = MIN_WEIGHT_VALUE,
-                           max_value: float = MAX_WEIGHT_VALUE) -> np.array:
-    # throw exception if max_value > min_value
-    # return np.random.normal(0, 1, size=(lines, columns))
-    # return np.zeros((lines, columns))
-    return np.random.uniform(min_value, max_value, size=(lines, columns))
+def generate_random_matrix(lines: int,
+                           columns: int,
+                           distribution: str = RANDOM_DISTRIBUTION,
+                           *args) -> np.array:
+    if distribution == "NORMAL":
+        mean: float = MEAN if len(args) == 0 else float(args[0])
+        standard_deviation: float = STANDARD_DEVIATION if len(args) <= 1 else float(args[1])
+        return np.random.normal(mean, standard_deviation, size=(lines, columns))
+    if distribution == "UNIFORM":
+        min_value: float = MIN_WEIGHT_VALUE if len(args) == 0 else float(args[0])
+        max_value: float = MAX_WEIGHT_VALUE if len(args) <= 1 else float(args[1])
+        return np.random.uniform(min_value, max_value, size=(lines, columns))
+    raise Exception("Unknown distribution")
 
 
-# interface defining the functionalities an activation function should have
-class Function:
-    def forward(self, x_0):
-        pass
 
-    def backward(self, x_0):
-        pass
-
-
-class Sigmoid(Function):
-    def forward(self, x_0):
-        return 1 / (1 + np.exp(-x_0))
-
-    def backward(self, x_0):
-        return np.exp(-x_0) / ((1 + np.exp(-x_0)) ** 2)
-
-
-class Linear(Function):
-    __a: float
-    __b: float
-
-    def __init__(self, a: float = 1, b: float = 0):
-        self.__a = a
-        self.__b = b
-
-    def forward(self, x_0):
-        return self.__a * x_0 + self.__b
-
-    def backward(self, x_0):
-        return self.__a

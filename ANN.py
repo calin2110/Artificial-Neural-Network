@@ -5,7 +5,8 @@ import numpy as np
 
 from Constants import BATCH_SIZE
 from Layer import Layer
-from Utils import Dataset, Function
+from Utils import Dataset
+from Functions import Function
 
 
 class ANN:
@@ -16,7 +17,11 @@ class ANN:
     def __init__(self):
         self.__dataset = Dataset()
 
-    def initialise_neural_network(self, neurons_count: list[int], activation_functions: list[Function]):
+    def initialise_neural_network(
+            self,
+            neurons_count: list[int],
+            activation_functions: list[Function]
+    ):
         if len(neurons_count) != len(activation_functions) + 1:
             raise Exception("plm")
         self.__layers = []
@@ -90,3 +95,12 @@ class ANN:
                 correct_answers += 1
         accuracy = correct_answers / total_answers
         print(f"Accuracy: {accuracy}")
+
+    def save_to_files(self, files_list: list[tuple[str, str, str]]):
+        for i, tup in enumerate(files_list):
+            self.__layers[i].save_to_files(tup[0], tup[1], tup[2])
+
+    def read_from_files(self, files_list: list[tuple[str, str, str]]):
+        self.__layers = [Layer(-1, -1) for _ in files_list]
+        for i, tup in enumerate(files_list):
+            self.__layers[i].read_from_files(tup[0], tup[1], tup[2])
