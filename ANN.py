@@ -60,6 +60,7 @@ class ANN:
     def train(self):
         iteration_count: int = 1
 
+        # TODO: integrate ewa and ews
         xs = []
         ys = []
         while iteration_count < 5000:
@@ -81,6 +82,7 @@ class ANN:
             iteration_count += 1
             self.__propagate_gradient_descent()
 
+        plt.ylim(bottom=0, top=2)
         plt.plot(xs, ys)
         plt.show()
 

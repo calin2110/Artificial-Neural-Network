@@ -24,7 +24,6 @@ def train_neural_network():
     neural_network.train()
     return neural_network
 
-
 # def test_neural_network_user():
 #     neural_network: NeuralNetwork = NeuralNetwork()
 #     with open(MODEL_FILE, "rb") as file:
@@ -78,10 +77,10 @@ def test_neural_network_user():
 
 
 if __name__ == '__main__':
+    train_neural_network()
     # test_neural_network()
     # test_neural_network()
     # test_neural_network_user()
-    train_neural_network()
     # ann.initialise_neural_network(neurons_count=[28 * 28, 16, 16, 10], activation_functions=[Sigmoid() for _ in range(3)])
     # ann.train()
     # neural_network = train_neural_network()

@@ -34,11 +34,33 @@ class Linear(Function):
 
 
 class ReLU(Function):
-    pass
+    def forward(self, x_0):
+        return np.maximum(0, x_0)
+
+    def backward(self, x_0):
+        gradient: np.array = np.zeros_like(x_0)
+        gradient[x_0 > 0] = 1
+        gradient[x_0 <= 0] = 0
+        return gradient
 
 
 class TanH(Function):
-    pass
+    def forward(self, x_0):
+        return (1 - np.exp(-2*x_0)) / (1 + np.exp(-2*x_0))
+
+    def backward(self, x_0):
+        return 4 * np.exp(-2*x_0) / ((1 + np.exp(-2*x_0)) ** 2)
+
+
+class LeakyReLU(Function):
+    def forward(self, x_0):
+        return np.maximum(0, x_0)
+
+    def backward(self, x_0):
+        gradient: np.array = np.zeros_like(shape=x_0.shape)
+        gradient[x_0 > 0] = 1
+        gradient[x_0 <= 0] = 0.1
+        return gradient
 
 
 class Functions:
