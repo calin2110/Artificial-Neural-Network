@@ -10,18 +10,27 @@ from PIL import Image, ImageOps
 from ANN import ANN
 from Constants import MAX_PIXEL_VALUE, HIDDEN_LAYER_NEURONS, HIDDEN_LAYERS
 from Functions import Functions
+from OptimizationType import OptimizationType
+from Regularization import RegularizationType
 
 
-def train_neural_network():
-    # TODO: reg, opt
+def train_neural_network(
+        optimization: OptimizationType,
+        file_to_save: str
+):
+    # TODO: reg
     neural_network: ANN = ANN()
     neurons = [28 * 28]
     for _ in range(HIDDEN_LAYERS):
         neurons.append(HIDDEN_LAYER_NEURONS)
     neurons.append(10)
-    activation_functions = [Functions.sigmoid for _ in range(HIDDEN_LAYERS + 1)]
-    neural_network.initialise_neural_network(neurons_count=neurons, activation_functions=activation_functions)
-    neural_network.train()
+    activation_functions = [Functions.tanh for _ in range(HIDDEN_LAYERS + 1)]
+    neural_network.initialise_neural_network(
+        neurons_count=neurons,
+        activation_functions=activation_functions,
+        optimization=optimization,
+        regularization=RegularizationType.NONE)
+    neural_network.train(file_to_save)
     return neural_network
 
 # def test_neural_network_user():
@@ -77,14 +86,10 @@ def test_neural_network_user():
 
 
 if __name__ == '__main__':
-    train_neural_network()
-    # test_neural_network()
-    # test_neural_network()
-    # test_neural_network_user()
-    # ann.initialise_neural_network(neurons_count=[28 * 28, 16, 16, 10], activation_functions=[Sigmoid() for _ in range(3)])
-    # ann.train()
-    # neural_network = train_neural_network()
-    # neural_network.test_on_test_data()
-    # test_neural_network_user()
+    # train_neural_network(Optimizations.STOCHASTIC, "stochastic.png")
+    # train_neural_network(Optimizations.MOMENTUM, "momentum.png")
+    train_neural_network(OptimizationType.ADA, "ada.png")
+    # train_neural_network(OptimizationType.RMS, "rms.png")
+    # train_neural_network(OptimizationType.ADAM, "adam.png")
 
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/

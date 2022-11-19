@@ -4,7 +4,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from Constants import BATCH_SIZE
+from OptimizationType import OptimizationType
 from Layer import Layer
+from Regularization import RegularizationType
 from Utils import Dataset
 from Functions import Function
 
@@ -12,7 +14,7 @@ from Functions import Function
 class ANN:
     __dataset: Dataset
     __layers: list[Layer]
-    __average_loss: float
+    __cost: float
 
     def __init__(self):
         self.__dataset = Dataset()
@@ -20,14 +22,21 @@ class ANN:
     def initialise_neural_network(
             self,
             neurons_count: list[int],
-            activation_functions: list[Function]
+            activation_functions: list[Function],
+            optimization: OptimizationType = OptimizationType.STOCHASTIC,
+            regularization: RegularizationType = RegularizationType.NONE
     ):
         if len(neurons_count) != len(activation_functions) + 1:
             raise Exception("plm")
         self.__layers = []
         for i in range(len(neurons_count[:-1])):
-            layer: Layer = Layer(input_layer_neurons=neurons_count[i], output_layer_neurons=neurons_count[i + 1],
-                                 activation_function=activation_functions[i])
+            layer: Layer = Layer(
+                        input_layer_neurons=neurons_count[i],
+                        output_layer_neurons=neurons_count[i + 1],
+                        activation_function=activation_functions[i],
+                        gd_optimization=optimization,
+                        regularization_type=regularization
+                        )
             self.__layers.append(layer)
 
     def save_current_state(self, filename: str):
@@ -51,19 +60,19 @@ class ANN:
 
     def __propagate_gradient_descent(self):
         for layer in self.__layers:
-            layer.gradient_descent(self.__average_loss)
+            layer.gradient_descent()
 
     def predict_result(self, values):
         predicted = self.__forward(values)
         return np.argmax(predicted)
 
-    def train(self):
+    def train(self, file: str):
         iteration_count: int = 1
-
+        plt.clf()
         # TODO: integrate ewa and ews
         xs = []
         ys = []
-        while iteration_count < 5000:
+        while True:
             batch: list[tuple[int, np.array]] = self.__dataset.get_batch(BATCH_SIZE)
             total_loss: float = 0
 
@@ -75,16 +84,18 @@ class ANN:
                 values: np.array = image[1]
                 total_loss += self.__complete_pass(values=values, supposed_activations=supposed_activations)
 
-            self.__average_loss = total_loss / BATCH_SIZE
-            print(f"Average loss is: {round(self.__average_loss, 3)} for iteration number {iteration_count}")
+            self.__cost = total_loss / BATCH_SIZE
+            for layer in self.__layers:
+                self.__cost += layer.get_regularization_value()
+            print(f"Average loss is: {round(self.__cost, 3)} for iteration number {iteration_count}")
             xs.append(iteration_count)
-            ys.append(self.__average_loss)
+            ys.append(self.__cost)
             iteration_count += 1
             self.__propagate_gradient_descent()
 
         plt.ylim(bottom=0, top=2)
         plt.plot(xs, ys)
-        plt.show()
+        plt.savefig(file)
 
     def test(self):
         correct_answers = 0

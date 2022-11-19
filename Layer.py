@@ -2,12 +2,21 @@ import pickle
 
 import numpy as np
 
+import Functions
 from Constants import LEARNING_RATE, BATCH_SIZE
+from OptimizationType import GradientDescent, OptimizationType, OptimizationFactory
+from Regularization import Regularization, RegularizationType, factory
 from Utils import generate_random_matrix
 from Functions import Function
 
 
 class Layer:
+    # gradient descent optimization used
+    __w_gradient_descent: GradientDescent
+    __b_gradient_descent: GradientDescent
+
+    __regularization: Regularization
+
     # the weights
     __w: np.array
 
@@ -29,12 +38,23 @@ class Layer:
 
     __total_delta_w: np.array
 
-    def __init__(self, input_layer_neurons: int, output_layer_neurons: int, activation_function: Function = None):
-        self.__w = generate_random_matrix(lines=output_layer_neurons, columns=input_layer_neurons)
-        self.__b = generate_random_matrix(lines=output_layer_neurons, columns=1)
+    def __init__(self,
+                 input_layer_neurons: int,
+                 output_layer_neurons: int,
+                 activation_function: Function = Functions.Sigmoid,
+                 gd_optimization: OptimizationType = OptimizationType.STOCHASTIC,
+                 regularization_type: RegularizationType = RegularizationType.NONE
+                 ):
         self.__f = activation_function
-        self.__total_delta_b = np.zeros_like(self.__b)
+        self.__regularization = factory.create_regularization(regularization_type)
+        self.__w = generate_random_matrix(lines=output_layer_neurons, columns=input_layer_neurons)
+        self.__w_gradient_descent = \
+            OptimizationFactory.create_optimization(optimization=gd_optimization, shape=self.__w.shape)
         self.__total_delta_w = np.zeros_like(self.__w)
+        self.__b = generate_random_matrix(lines=output_layer_neurons, columns=1)
+        self.__b_gradient_descent = \
+            OptimizationFactory.create_optimization(optimization=gd_optimization, shape=self.__b.shape)
+        self.__total_delta_b = np.zeros_like(self.__b)
 
     def forward(self, values: np.array) -> np.array:
         self.__values = values
@@ -48,11 +68,16 @@ class Layer:
         self.__total_delta_w += np.dot(delta_b, self.__values.T)
         return np.dot(self.__w.T, delta_b)
 
-    def gradient_descent(self, average_error: float):
-        self.__w -= LEARNING_RATE * average_error * self.__total_delta_w / BATCH_SIZE
-        self.__b -= LEARNING_RATE * average_error * self.__total_delta_b / BATCH_SIZE
+    def gradient_descent(self):
+        self.__w -= LEARNING_RATE * self.__regularization.backward(self.__w)
+        self.__w -= LEARNING_RATE * self.__w_gradient_descent.make_step(self.__total_delta_w / BATCH_SIZE)
+        self.__b -= LEARNING_RATE * self.__regularization.backward(self.__b)
+        self.__b -= LEARNING_RATE * self.__b_gradient_descent.make_step(self.__total_delta_b / BATCH_SIZE)
         self.__total_delta_b = np.zeros_like(self.__b)
         self.__total_delta_w = np.zeros_like(self.__w)
+
+    def get_regularization_value(self) -> float:
+        return self.__regularization.forward(self.__w) + self.__regularization.forward(self.__b)
 
     def read_from_files(self, weight_file: str, bias_file: str, function_file: str):
         with open(bias_file, "rb") as f:
