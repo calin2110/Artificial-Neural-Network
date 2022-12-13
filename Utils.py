@@ -43,6 +43,3 @@ def generate_random_matrix(lines: int,
         max_value: float = MAX_WEIGHT_VALUE if len(args) <= 1 else float(args[1])
         return np.random.uniform(min_value, max_value, size=(lines, columns))
     raise Exception("Unknown distribution")
-
-
-

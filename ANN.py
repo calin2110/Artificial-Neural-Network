@@ -1,3 +1,4 @@
+import math
 import pickle
 
 import matplotlib.pyplot as plt
@@ -18,6 +19,7 @@ class ANN:
 
     def __init__(self):
         self.__dataset = Dataset()
+        self.__cost = math.inf
 
     def initialise_neural_network(
             self,
@@ -66,13 +68,12 @@ class ANN:
         predicted = self.__forward(values)
         return np.argmax(predicted)
 
-    def train(self, file: str):
+    def train(self, threshold: float):
         iteration_count: int = 1
         plt.clf()
-        # TODO: integrate ewa and ews
         xs = []
         ys = []
-        while True:
+        while self.__cost > threshold:
             batch: list[tuple[int, np.array]] = self.__dataset.get_batch(BATCH_SIZE)
             total_loss: float = 0
 
@@ -95,7 +96,8 @@ class ANN:
 
         plt.ylim(bottom=0, top=2)
         plt.plot(xs, ys)
-        plt.savefig(file)
+        plt.show()
+        self.save_to_files()
 
     def test(self):
         correct_answers = 0
@@ -107,13 +109,13 @@ class ANN:
             if predicted_answer == correct_answer:
                 correct_answers += 1
         accuracy = correct_answers / total_answers
-        print(f"Accuracy: {accuracy}")
+        print(f"Test accuracy: {accuracy}")
 
-    def save_to_files(self, files_list: list[tuple[str, str, str]]):
-        for i, tup in enumerate(files_list):
-            self.__layers[i].save_to_files(tup[0], tup[1], tup[2])
+    def save_to_files(self):
+        for i, layer in enumerate(self.__layers):
+            layer.save_to_files(i)
 
-    def read_from_files(self, files_list: list[tuple[str, str, str]]):
-        self.__layers = [Layer(-1, -1) for _ in files_list]
-        for i, tup in enumerate(files_list):
-            self.__layers[i].read_from_files(tup[0], tup[1], tup[2])
+    def read_from_files(self, layer_count: int):
+        self.__layers = [Layer(1, 1) for _ in range(layer_count)]
+        for i in range(layer_count):
+            self.__layers[i].read_from_files(i)

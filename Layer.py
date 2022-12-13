@@ -3,11 +3,11 @@ import pickle
 import numpy as np
 
 import Functions
-from Constants import LEARNING_RATE, BATCH_SIZE
+from Constants import LEARNING_RATE, BATCH_SIZE, REGULARIZATION_RATE
+from Functions import Function
 from OptimizationType import GradientDescent, OptimizationType, OptimizationFactory
 from Regularization import Regularization, RegularizationType, factory
 from Utils import generate_random_matrix
-from Functions import Function
 
 
 class Layer:
@@ -69,30 +69,30 @@ class Layer:
         return np.dot(self.__w.T, delta_b)
 
     def gradient_descent(self):
-        self.__w -= LEARNING_RATE * self.__regularization.backward(self.__w)
+        self.__w -= LEARNING_RATE * REGULARIZATION_RATE * self.__regularization.backward(self.__w)
         self.__w -= LEARNING_RATE * self.__w_gradient_descent.make_step(self.__total_delta_w / BATCH_SIZE)
-        self.__b -= LEARNING_RATE * self.__regularization.backward(self.__b)
+        self.__b -= LEARNING_RATE * REGULARIZATION_RATE * self.__regularization.backward(self.__b)
         self.__b -= LEARNING_RATE * self.__b_gradient_descent.make_step(self.__total_delta_b / BATCH_SIZE)
         self.__total_delta_b = np.zeros_like(self.__b)
         self.__total_delta_w = np.zeros_like(self.__w)
 
     def get_regularization_value(self) -> float:
-        return self.__regularization.forward(self.__w) + self.__regularization.forward(self.__b)
+        return REGULARIZATION_RATE * self.__regularization.forward(self.__w) + self.__regularization.forward(self.__b)
 
-    def read_from_files(self, weight_file: str, bias_file: str, function_file: str):
-        with open(bias_file, "rb") as f:
+    def read_from_files(self, index: int):
+        with open(f"model/layer_{index}/bias.nn", "rb") as f:
             self.__b = pickle.load(f)
-        with open(weight_file, "rb") as f:
+        with open(f"model/layer_{index}/weights.nn", "rb") as f:
             self.__w = pickle.load(f)
-        with open(function_file, "rb") as f:
+        with open(f"model/layer_{index}/function.nn", "rb") as f:
             self.__f = pickle.load(f)
         self.__total_delta_b = np.zeros_like(self.__b)
         self.__total_delta_w = np.zeros_like(self.__w)
 
-    def save_to_files(self, weight_file: str, bias_file: str, function_file: str):
-        with open(bias_file, "wb") as f:
+    def save_to_files(self, index: int):
+        with open(f"model/layer_{index}/bias.nn", "wb") as f:
             pickle.dump(self.__b, f)
-        with open(weight_file, "wb") as f:
+        with open(f"model/layer_{index}/weights.nn", "wb") as f:
             pickle.dump(self.__w, f)
-        with open(function_file, "wb") as f:
+        with open(f"model/layer_{index}/function.nn", "wb") as f:
             pickle.dump(self.__f, f)

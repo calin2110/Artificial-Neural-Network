@@ -1,75 +1,33 @@
-# This is a sample Python script.
-
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
-import pickle
-
 import numpy as np
 from PIL import Image, ImageOps
 
+import Constants
 from ANN import ANN
 from Constants import MAX_PIXEL_VALUE, HIDDEN_LAYER_NEURONS, HIDDEN_LAYERS
 from Functions import Functions
 from OptimizationType import OptimizationType
 from Regularization import RegularizationType
 
+class MainApp:
+    __done: bool
 
-def train_neural_network(
-        optimization: OptimizationType,
-        file_to_save: str
-):
-    # TODO: reg
-    neural_network: ANN = ANN()
-    neurons = [28 * 28]
-    for _ in range(HIDDEN_LAYERS):
-        neurons.append(HIDDEN_LAYER_NEURONS)
-    neurons.append(10)
-    activation_functions = [Functions.tanh for _ in range(HIDDEN_LAYERS + 1)]
-    neural_network.initialise_neural_network(
-        neurons_count=neurons,
-        activation_functions=activation_functions,
-        optimization=optimization,
-        regularization=RegularizationType.NONE)
-    neural_network.train(file_to_save)
-    return neural_network
+    def __init__(self):
+        self.__done = False
+        self.__options = {0: self.__exit, 1: self.__train, 2: self.__test_mnist, 3: self.__test_my_digits}
 
-# def test_neural_network_user():
-#     neural_network: NeuralNetwork = NeuralNetwork()
-#     with open(MODEL_FILE, "rb") as file:
-#         neural_network = pickle.load(file)
-#     while True:
-#         path: str = input("Path to image:")
-#         try:
-#             image: Image = Image.open(path)
-#             grayscale_image: Image = ImageOps.grayscale(image)
-#
-#             gray_pixels = np.array(grayscale_image) / MAX_PIXEL_VALUE
-#             pixels: np.array = np.reshape(gray_pixels, (gray_pixels.shape[0] * gray_pixels.shape[1], 1))
-#
-#             result: tuple[int, float] = neural_network.predict_result(pixels=pixels)
-#             print(f"The digit chosen is {result[0]} with a chance of {round(result[1], 4) * 100}%")
-#         except Exception as exception:
-#             print(exception)
+    def __exit(self):
+        self.__done = True
 
+    def __test_mnist(self):
+        neural_network: ANN = ANN()
+        neural_network.read_from_files(layer_count=HIDDEN_LAYERS + 1)
+        neural_network.test()
 
-def test_neural_network():
-    neural_network: ANN = ANN()
-    neural_network.read_from_files([
-        ("model/w1.nn", "model/b1.nn", "model/f1.nn"),
-        ("model/w2.nn", "model/b2.nn", "model/f2.nn"),
-        ("model/wo.nn", "model/bo.nn", "model/fo.nn")
-    ])
-    neural_network.test()
-    # neural_network.test_on_test_data()
-
-
-def test_neural_network_user():
-    neural_network: ANN = ANN()
-    with open("model.ann", "rb") as file:
-        neural_network = pickle.load(file)
-    while True:
-        path: str = input("Path to image:")
-        try:
+    def __test_my_digits(self):
+        neural_network: ANN = ANN()
+        neural_network.read_from_files(layer_count=HIDDEN_LAYERS+1)
+        for i in range(10):
+            path: str = f"MyDigits/{i}.png"
             image: Image = Image.open(path)
             grayscale_image: Image = ImageOps.grayscale(image)
 
@@ -77,19 +35,52 @@ def test_neural_network_user():
             pixels: np.array = np.reshape(gray_pixels, (gray_pixels.shape[0] * gray_pixels.shape[1], 1))
 
             result = neural_network.predict_result(pixels)
-            print(f"The digit chosen is {result}")
-        except Exception as exception:
-            print(exception)
+            print(f"I have predicted {result} but the answer was {i}")
+
+    def __train(self):
+        optimization_type: str = input("The Optimization you want to use is: STOCHASTIC, MOMENTUM, RMS, ADA, ADAM\n>")
+        optimization: OptimizationType = OptimizationType[optimization_type.strip().upper()]
+        error_threshold: float = float(input("The error threshold you want to stop at is: \n>"))
+        regularization_type: str = input("The regularization you want to use is: NONE, L1, L2\n>")
+        regularization: RegularizationType = RegularizationType[regularization_type.strip().upper()]
+
+        neural_network: ANN = ANN()
+        neurons = [28 * 28]
+        for _ in range(HIDDEN_LAYERS):
+            neurons.append(HIDDEN_LAYER_NEURONS)
+        neurons.append(10)
+        activation_functions = [Functions.tanh for _ in range(HIDDEN_LAYERS + 1)]
+        neural_network.initialise_neural_network(
+            neurons_count=neurons,
+            activation_functions=activation_functions,
+            optimization=optimization,
+            regularization=regularization
+        )
+        neural_network.train(
+            threshold=error_threshold
+        )
+        print("Finished training the Neural Network")
+
+    def __print_menu(self):
+        print("0 to exit")
+        print("1 to train the ANN")
+        print("2 to test it on MNIST")
+        print("3 to test it on my digits")
+        print("4 to grid search")
+
+    def run(self):
+        while not self.__done:
+            try:
+                self.__print_menu()
+                choice: int = int(input(">"))
+                self.__options[choice]()
+            except Exception as exception:
+                print(exception)
 
 
-# test_neural_network()
 
 
 if __name__ == '__main__':
-    # train_neural_network(Optimizations.STOCHASTIC, "stochastic.png")
-    # train_neural_network(Optimizations.MOMENTUM, "momentum.png")
-    train_neural_network(OptimizationType.ADA, "ada.png")
-    # train_neural_network(OptimizationType.RMS, "rms.png")
-    # train_neural_network(OptimizationType.ADAM, "adam.png")
+    app = MainApp()
+    app.run()
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
